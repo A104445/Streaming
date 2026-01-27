@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PicoteFlix</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <div id="header-container"></div>
+
+  <div id="main-content">
+    
+    <h2>🔥 Filmes Populares</h2>
+    <div class="slider-container">
+      <button class="nav-btn prev" onclick="scrollSlider('sliderPopularMovies', -300)">&#10094;</button>
+      <div class="slider" id="sliderPopularMovies"></div>
+      <button class="nav-btn next" onclick="scrollSlider('sliderPopularMovies', 300)">&#10095;</button>
+    </div>
+
+    <h2>🔥 Séries Populares</h2>
+    <div class="slider-container">
+      <button class="nav-btn prev" onclick="scrollSlider('sliderPopularTV', -300)">&#10094;</button>
+      <div class="slider" id="sliderPopularTV"></div>
+      <button class="nav-btn next" onclick="scrollSlider('sliderPopularTV', 300)">&#10095;</button>
+    </div>
+
+    <h2>🕒 Novos Filmes</h2>
+    <div class="slider-container">
+      <button class="nav-btn prev" onclick="scrollSlider('sliderRecentMovies', -300)">&#10094;</button>
+      <div class="slider" id="sliderRecentMovies"></div>
+      <button class="nav-btn next" onclick="scrollSlider('sliderRecentMovies', 300)">&#10095;</button>
+    </div>
+
+    <h2>🕒 Novas Séries</h2>
+    <div class="slider-container">
+      <button class="nav-btn prev" onclick="scrollSlider('sliderRecentTV', -300)">&#10094;</button>
+      <div class="slider" id="sliderRecentTV"></div>
+      <button class="nav-btn next" onclick="scrollSlider('sliderRecentTV', 300)">&#10095;</button>
+    </div>
+
+  </div>
+
+  <div id="search-results" style="display: none; padding: 20px;">
+    <h2>Resultados da Pesquisa</h2>
+    <div id="results-grid" class="grid-container"></div>
+  </div>
+
+  <script type="module" src="assets/js/main.js"></script>
+  <script type="module" src="assets/js/search.js"></script>
+
+</body>
+</html>

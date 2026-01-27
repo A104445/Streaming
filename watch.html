@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistir - PicoteFlix</title>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
+  
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">&larr; Voltar</a>
+
+  <div id="info-area" class="info-container">
+    <p style="padding:20px">A carregar detalhes...</p>
+  </div>
+
+  <div id="controls-area" class="controls-area">
+    <div class="series-bar">
+        <div class="control-group">
+            <label>Temporada</label>
+            <select id="season-select"></select>
+        </div>
+        <div class="control-group">
+            <label>Episódio</label>
+            <select id="episode-select"></select>
+        </div>
+        <button class="btn-load" onclick="carregarVideo()">Ver Episódio</button>
+    </div>
+  </div>
+
+  <div class="server-container">
+    <span class="server-label">Fonte do vídeo:</span>
+    <button class="server-btn active" onclick="mudarServidor(0)">Server 1</button>
+    <button class="server-btn" onclick="mudarServidor(1)">Server 2</button>
+    <button class="server-btn" onclick="mudarServidor(2)">Server 3</button>
+    <button class="server-btn" onclick="mudarServidor(3)">Server 4</button>
+  </div>
+
+  <div class="player-wrapper">
+    <div class="player-container">
+        <iframe id="video-player" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getDetails } from "./assets/js/tmdb.js";
+
+    const params = new URLSearchParams(location.search);
+    const tmdbId = params.get("tmdb");
+    const type = params.get("type") || "movie";
+
+    const player = document.getElementById("video-player");
+    const infoArea = document.getElementById("info-area");
+    const controlsArea = document.getElementById("controls-area");
+    const seasonSelect = document.getElementById("season-select");
+    const episodeSelect = document.getElementById("episode-select");
+    const serverBtns = document.querySelectorAll(".server-btn");
+
+    // --- LISTA DE SERVIDORES ATUALIZADA ---
+    const SERVERS = [
+        "https://vidsrc-embed.ru/embed",  // Server 1
+        "https://vidsrc-embed.su/embed",  // Server 2
+        "https://vidsrcme.su/embed",      // Server 3
+        "https://vsrc.su/embed"           // Server 4
+    ];
+    
+    let currentServerIndex = 0;
+    let seasonsData = [];
+
+    async function init() {
+        if (!tmdbId) return window.location.href = 'index.html';
+
+        const dados = await getDetails(tmdbId, type);
+        
+        if (!dados) {
+            infoArea.innerHTML = "<h2>Erro ao carregar detalhes.</h2>";
+            return;
+        }
+
+        const titulo = dados.title || dados.name;
+        const sinopse = dados.overview || "Sem sinopse.";
+        const poster = dados.poster_path 
+            ? `https://image.tmdb.org/t/p/w500${dados.poster_path}` 
+            : "https://placehold.co/200x300/1a1a1a/666666?text=Sem+Capa";
+        const ano = (dados.release_date || dados.first_air_date || "").split("-")[0];
+        const rating = dados.vote_average ? `⭐ ${dados.vote_average.toFixed(1)}` : "";
+        const generos = dados.genres ? dados.genres.map(g=>g.name).join(", ") : "";
+
+        infoArea.innerHTML = `
+            <img src="${poster}" class="poster-img" onerror="this.onerror=null;this.src='https://placehold.co/200x300/1a1a1a/666666?text=Erro';">
+            <div class="details">
+                <h1>${titulo}</h1>
+                <div class="meta"><span>${ano}</span> • <span>${rating}</span> • <span>${generos}</span></div>
+                <p>${sinopse}</p>
+            </div>
+        `;
+
+        if (type === "movie") {
+            carregarVideo();
+        } else {
+            controlsArea.style.display = "block";
+            seasonsData = (dados.seasons || []).filter(s => s.season_number > 0);
+            
+            seasonSelect.innerHTML = "";
+            seasonsData.forEach(season => {
+                seasonSelect.innerHTML += `<option value="${season.season_number}">Temporada ${season.season_number}</option>`;
+            });
+
+            seasonSelect.addEventListener("change", atualizarListaEpisodios);
+            atualizarListaEpisodios();
+            carregarVideo();
+        }
+    }
+
+    window.atualizarListaEpisodios = () => {
+        const tempSelecionada = parseInt(seasonSelect.value);
+        const dadosTemporada = seasonsData.find(s => s.season_number === tempSelecionada);
+        
+        episodeSelect.innerHTML = "";
+        if (dadosTemporada) {
+            for (let i = 1; i <= dadosTemporada.episode_count; i++) {
+                episodeSelect.innerHTML += `<option value="${i}">Episódio ${i}</option>`;
+            }
+        }
+    };
+
+    window.carregarVideo = () => {
+        const baseUrl = SERVERS[currentServerIndex];
+        let urlFinal = "";
+
+        if (type === "movie") {
+            urlFinal = `${baseUrl}/movie/${tmdbId}`;
+        } else {
+            const s = seasonSelect.value;
+            const e = episodeSelect.value;
+            urlFinal = `${baseUrl}/tv/${tmdbId}/${s}/${e}`;
+        }
+        
+        player.src = urlFinal;
+        console.log("A carregar de:", baseUrl);
+    };
+
+    window.mudarServidor = (index) => {
+        currentServerIndex = index;
+        serverBtns.forEach((btn, idx) => {
+            if(idx === index) btn.classList.add("active");
+            else btn.classList.remove("active");
+        });
+        carregarVideo();
+    };
+
+    init();
+  </script>
+
+</body>
+</html>
