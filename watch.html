@@ -3,11 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PicoteFlix Player</title>
-  
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
-  
+  <title>PicoteFlix</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">  
   <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    .actions-container {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .action-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 50px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+    .action-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    
+    /* Cores quando estão ativos */
+    .action-btn.active-visto {
+        background: #4ade80; /* Verde */
+        color: #0a1a2f;
+        border-color: #4ade80;
+        font-weight: bold;
+    }
+    .action-btn.active-gosto {
+        background: #ff4757; /* Vermelho */
+        color: white;
+        border-color: #ff4757;
+    }
+  </style>
 </head>
 <body>
 
@@ -17,7 +50,7 @@
     <p style="padding:20px">A carregar detalhes...</p>
   </div>
 
-  <div id="controls-area" class="controls-area">
+  <div id="controls-area" class="controls-area" style="display: none;">
     <div class="series-bar">
         <div class="control-group">
             <label>Temporada</label>
@@ -47,6 +80,9 @@
 
   <script type="module">
     import { getDetails } from "./assets/js/tmdb.js";
+    // --- NOVOS IMPORTS DA BASE DE DADOS ---
+    import { toggleVisto, toggleGosto, toggleVerMaisTarde, verificarEstado } from "./assets/js/db-logic.js";
+    import { auth, onAuthStateChanged } from "./assets/js/firebase-config.js";
 
     const params = new URLSearchParams(location.search);
     const tmdbId = params.get("tmdb");
@@ -59,16 +95,16 @@
     const episodeSelect = document.getElementById("episode-select");
     const serverBtns = document.querySelectorAll(".server-btn");
 
-    // --- LISTA DE SERVIDORES ATUALIZADA ---
     const SERVERS = [
-        "https://vidsrc-embed.ru/embed",  // Server 1
-        "https://vidsrc-embed.su/embed",  // Server 2
-        "https://vidsrcme.su/embed",      // Server 3
-        "https://vsrc.su/embed"           // Server 4
+        "https://vidsrc.vip/embed",  
+        "https://vidsrc.pro/embed",  
+        "https://vidsrc.xyz/embed",
+        "https://superembed.stream/embed"
     ];
     
     let currentServerIndex = 0;
     let seasonsData = [];
+    let currentMovieData = null; // Guardar dados para a BD
 
     async function init() {
         if (!tmdbId) return window.location.href = 'index.html';
@@ -80,6 +116,7 @@
             return;
         }
 
+        // Preparar dados para o HTML e para a Base de Dados
         const titulo = dados.title || dados.name;
         const sinopse = dados.overview || "Sem sinopse.";
         const poster = dados.poster_path 
@@ -87,16 +124,42 @@
             : "https://placehold.co/200x300/1a1a1a/666666?text=Sem+Capa";
         const ano = (dados.release_date || dados.first_air_date || "").split("-")[0];
         const rating = dados.vote_average ? `⭐ ${dados.vote_average.toFixed(1)}` : "";
-        const generos = dados.genres ? dados.genres.map(g=>g.name).join(", ") : "";
+        const generosTexto = dados.genres ? dados.genres.map(g=>g.name).join(", ") : "";
 
+        // Guardar no objeto global para usar nos botões
+        currentMovieData = {
+            id: tmdbId,
+            title: titulo,
+            poster_path: dados.poster_path,
+            type: type,
+            genres: dados.genres ? dados.genres.map(g => g.id) : []
+        };
+
+        // INJETAR HTML (COM OS NOVOS BOTÕES)
         infoArea.innerHTML = `
             <img src="${poster}" class="poster-img" onerror="this.onerror=null;this.src='https://placehold.co/200x300/1a1a1a/666666?text=Erro';">
             <div class="details">
                 <h1>${titulo}</h1>
-                <div class="meta"><span>${ano}</span> • <span>${rating}</span> • <span>${generos}</span></div>
+                <div class="meta"><span>${ano}</span> • <span>${rating}</span> • <span>${generosTexto}</span></div>
+                
+                <div class="actions-container">
+                    <button id="btnVisto" class="action-btn">
+                        <span class="icon">👁️</span> <span class="text">Marcar Visto</span>
+                    </button>
+                    <button id="btnGosto" class="action-btn">
+                        <span class="icon">🤍</span> <span class="text">Gosto</span>
+                    </button>
+                    <button id="btnWatchLater" class="action-btn">
+                        <span class="icon">🕒</span> <span class="text">Ver Depois</span>
+                    </button>
+                </div>
+
                 <p>${sinopse}</p>
             </div>
         `;
+
+        // LIGAR OS EVENTOS AOS BOTÕES AGORA QUE ELES EXISTEM
+        configurarBotoes();
 
         if (type === "movie") {
             carregarVideo();
@@ -110,9 +173,77 @@
             });
 
             seasonSelect.addEventListener("change", atualizarListaEpisodios);
-            atualizarListaEpisodios();
-            carregarVideo();
+            atualizarListaEpisodios(); // Isto vai carregar o vídeo também
         }
+    }
+
+    // --- NOVA FUNÇÃO: CONFIGURAR BOTÕES ---
+    function configurarBotoes() {
+        const btnVisto = document.getElementById("btnVisto");
+        const btnGosto = document.getElementById("btnGosto");
+        const btnWatchLater = document.getElementById("btnWatchLater"); 
+
+        // 1. Verificar estado inicial quando o user faz login
+        onAuthStateChanged(auth, async (user) => {
+            if (user && currentMovieData) {
+                const estado = await verificarEstado(type, tmdbId);
+                
+                if (estado.visto) {
+                    btnVisto.classList.add("active-visto");
+                    btnVisto.querySelector(".text").innerText = "Visto";
+                }
+                if (estado.gosto) {
+                    btnGosto.classList.add("active-gosto");
+                    btnGosto.querySelector(".icon").innerText = "❤️";
+                }
+                if (estado.later) {
+                    btnWatchLater.classList.add("active-later");
+                    btnWatchLater.querySelector(".text").innerText = "Na Lista";
+                }
+            }
+        });
+
+        // 2. Clique no Olho (Visto)
+        btnVisto.addEventListener("click", async () => {
+            if(!currentMovieData) return;
+            const isVisto = await toggleVisto(currentMovieData);
+            
+            if (isVisto) {
+                btnVisto.classList.add("active-visto");
+                btnVisto.querySelector(".text").innerText = "Visto";
+            } else {
+                btnVisto.classList.remove("active-visto");
+                btnVisto.querySelector(".text").innerText = "Marcar Visto";
+            }
+        });
+
+        // 3. Clique no Coração (Gosto)
+        btnGosto.addEventListener("click", async () => {
+            if(!currentMovieData) return;
+            const isLiked = await toggleGosto(currentMovieData);
+            
+            if (isLiked) {
+                btnGosto.classList.add("active-gosto");
+                btnGosto.querySelector(".icon").innerText = "❤️";
+            } else {
+                btnGosto.classList.remove("active-gosto");
+                btnGosto.querySelector(".icon").innerText = "🤍";
+            }
+        });
+
+        // 4. Clique no Relógio
+        btnWatchLater.addEventListener("click", async () => {
+            if(!currentMovieData) return;
+            const isAdded = await toggleVerMaisTarde(currentMovieData);
+            
+            if (isAdded) {
+                btnWatchLater.classList.add("active-later");
+                btnWatchLater.querySelector(".text").innerText = "Na Lista";
+            } else {
+                btnWatchLater.classList.remove("active-later");
+                btnWatchLater.querySelector(".text").innerText = "Ver Depois";
+            }
+        });
     }
 
     window.atualizarListaEpisodios = () => {
@@ -124,6 +255,8 @@
             for (let i = 1; i <= dadosTemporada.episode_count; i++) {
                 episodeSelect.innerHTML += `<option value="${i}">Episódio ${i}</option>`;
             }
+            // Carregar automaticamente o episódio 1 ao mudar de temporada
+            carregarVideo();
         }
     };
 

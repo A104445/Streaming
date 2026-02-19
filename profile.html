@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>PicoteFlix</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <a href="index.html" class="back-btn" style="margin: 20px;">Voltar ao Início</a>
+
+  <div class="profile-wrapper">
+    <div class="profile-card">
+      
+      <div class="profile-left">
+        
+        <div class="avatar-container" style="position: relative; display: inline-block;">
+          <img id="p-avatar" src="https://placehold.co/150x150?text=..." class="big-avatar">
+          
+          <button id="btnChangePhoto" class="edit-avatar-btn" title="Alterar Foto">📷</button>
+          
+          <button id="btnRemovePhoto" title="Remover Foto" style="position: absolute; bottom: 0; left: 0; background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">🗑️</button>
+          
+          <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+
+        <p id="uploadMsg" style="display: none; color: #d4af37; font-size: 0.85rem; margin-top: 5px;">A processar...</p>
+
+        <h2 id="p-name">A carregar...</h2>
+        <p class="user-badge">Membro PicoteFlix</p>
+      
+      </div>
+
+      <div class="profile-right">
+        <h3>Informações da Conta</h3>
+        
+        <div class="info-group">
+            <label>Email</label>
+            <div id="p-email" class="info-value">...</div>
+        </div>
+
+        <div class="info-group">
+            <label>Password</label>
+            
+            <div class="pass-row" id="passRowDisplay">
+                <span>••••••••••</span>
+                <button id="btnShowPassForm" class="btn-small">Alterar</button>
+            </div>
+
+            <div id="passForm" style="display: none; background: #0a1a2f; padding: 15px; border-radius: 5px; margin-top: 10px; border: 1px solid #30475e;">
+                <p style="margin: 0 0 10px; font-size: 0.8rem; color: #aaa;">Por segurança, confirma a tua password atual.</p>
+                
+                <div class="password-wrapper" style="margin-bottom: 10px;">
+                    <input type="password" id="currentPass" placeholder="Password Atual" style="width: 100%; padding: 8px; background: #112240; border: 1px solid #30475e; color: white; border-radius: 4px;">
+                    <span class="eye-icon" onclick="togglePass('currentPass', this)">🙈</span>
+                </div>
+                
+                <div class="password-wrapper" style="margin-bottom: 10px;">
+                    <input type="password" id="newPass" placeholder="Nova Password" style="width: 100%; padding: 8px; background: #112240; border: 1px solid #30475e; color: white; border-radius: 4px;">
+                    <span class="eye-icon" onclick="togglePass('newPass', this)">🙈</span>
+                </div>
+                
+                <div class="password-wrapper" style="margin-bottom: 10px;">
+                    <input type="password" id="confirmNewPass" placeholder="Repetir Password" style="width: 100%; padding: 8px; background: #112240; border: 1px solid #30475e; color: white; border-radius: 4px;">
+                    <span class="eye-icon" onclick="togglePass('confirmNewPass', this)">🙈</span>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button id="btnSavePass" class="btn-small" style="background: var(--gold); color: var(--bg); font-weight: bold; width: 100%; border: none;">Guardar</button>
+                    <button id="btnCancelPass" class="btn-small" style="background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; width: 100%;">Cancelar</button>
+                </div>
+                
+                <p id="passMsg" style="color: var(--gold); font-size: 0.85rem; margin-top: 10px; display: none; text-align: center;"></p>
+            </div>
+        </div>
+
+        <div class="info-group">
+            <label>ID de Utilizador</label>
+            <div id="p-uid" class="info-value-small">...</div>
+        </div>
+
+        <hr style="border-color: #30475e; margin: 30px 0;">
+
+        <button id="btnLogout" class="logout-btn">Terminar Sessão</button>
+      </div>
+
+    </div>
+
+    <div id="deletePhotoModal" class="modal-overlay" style="display: none;">
+      <div class="modal-box">
+          <div class="modal-icon">🗑️</div>
+          <h2 class="modal-title">Remover Foto?</h2>
+          <p class="modal-text">
+              Tens a certeza que queres apagar a tua foto de perfil?<br>
+              Ela será substituída por uma imagem com a tua inicial.
+          </p>
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+              <button id="btnConfirmDeletePhoto" class="modal-btn" style="background: #ff6b6b; color: white;">Sim, apagar</button>
+              <button onclick="closeDeletePhotoModal()" class="modal-btn" style="background: #333; color: white;">Cancelar</button>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePass(inputId, iconElement) {
+        const input = document.getElementById(inputId);
+        
+        if (input.type === "password") {
+            // Mudar para TEXTO e abrir o olho
+            input.type = "text";
+            iconElement.innerText = "👁️"; 
+        } else {
+            // Mudar para PASSWORD e fechar o olho (macaco)
+            input.type = "password";
+            iconElement.innerText = "🙈"; 
+        }
+    }
+    function closeDeletePhotoModal() {
+      document.getElementById('deletePhotoModal').style.display = 'none';
+    }
+</script>
+
+  <script type="module" src="assets/js/profile-logic.js"></script>
+
+</body>
+</html>

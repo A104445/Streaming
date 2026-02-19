@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PicoteFlix</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body { padding-top: 80px; }
+        .history-section { padding: 20px; }
+        .section-title { 
+            color: var(--gold); 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 10px; margin-top: 40px; 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .grid-history {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .history-card {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .history-card:hover { transform: scale(1.05); z-index: 2; }
+        .history-card img { width: 100%; height: 210px; object-fit: cover; }
+        .history-card h4 {
+            padding: 8px; font-size: 0.9rem; margin: 0; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; text-align: center;
+        }
+        .empty-msg { color: #666; font-style: italic; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
+        <a href="index.html" class="back-btn">Voltar ao Início</a>
+        <h1>📜 O Meu Histórico</h1>
+        <div style="width: 100px;"></div> </div>
+
+    <div class="history-section">
+        
+        <h2 class="section-title">👁️ Filmes que já vi</h2>
+        <div id="grid-hist-movies" class="grid-history"></div>
+
+        <h2 class="section-title">👁️ Séries que já vi</h2>
+        <div id="grid-hist-tv" class="grid-history"></div>
+
+        <h2 class="section-title">❤️ Filmes que gostei</h2>
+        <div id="grid-likes-movies" class="grid-history"></div>
+
+        <h2 class="section-title">❤️ Séries que gostei</h2>
+        <div id="grid-likes-tv" class="grid-history"></div>
+
+    </div>
+
+    <script type="module">
+        import { getFullHistory } from "./assets/js/db-logic.js";
+        import { auth, onAuthStateChanged } from "./assets/js/firebase-config.js";
+
+        const grids = {
+            histMovies: document.getElementById("grid-hist-movies"),
+            histTV: document.getElementById("grid-hist-tv"),
+            likesMovies: document.getElementById("grid-likes-movies"),
+            likesTV: document.getElementById("grid-likes-tv")
+        };
+
+        function renderGrid(element, data, type) {
+            element.innerHTML = "";
+            if (data.length === 0) {
+                element.innerHTML = "<p class='empty-msg'>Ainda nada aqui...</p>";
+                return;
+            }
+
+            data.forEach(item => {
+                const poster = item.poster 
+                    ? `https://image.tmdb.org/t/p/w200${item.poster}`
+                    : "https://placehold.co/140x210?text=Sem+Capa";
+                
+                element.innerHTML += `
+                    <div class="history-card" onclick="window.location.href='watch.html?tmdb=${item.id}&type=${type}'">
+                        <img src="${poster}" loading="lazy">
+                        <h4>${item.title}</h4>
+                    </div>
+                `;
+            });
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // 1. Buscar Histórico (Vistos)
+                const history = await getFullHistory('history');
+                renderGrid(grids.histMovies, history.movie, 'movie');
+                renderGrid(grids.histTV, history.tv, 'tv');
+
+                // 2. Buscar Likes (Gostos)
+                const likes = await getFullHistory('likes');
+                renderGrid(grids.likesMovies, likes.movie, 'movie');
+                renderGrid(grids.likesTV, likes.tv, 'tv');
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+    </script>
+</body>
+</html>

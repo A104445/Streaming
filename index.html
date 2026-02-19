@@ -13,32 +13,94 @@
 
   <div id="main-content">
     
-    <h2>🔥 Filmes Populares</h2>
-    <div class="slider-container">
-      <button class="nav-btn prev" onclick="scrollSlider('sliderPopularMovies', -300)">&#10094;</button>
-      <div class="slider" id="sliderPopularMovies"></div>
-      <button class="nav-btn next" onclick="scrollSlider('sliderPopularMovies', 300)">&#10095;</button>
+    <div class="category-section">
+      <h2>🔥 Filmes Populares</h2>
+      <div class="slider-container">
+        <button class="nav-btn prev" onclick="scrollSlider('sliderPopularMovies', -300)">&#10094;</button>
+        <div class="slider" id="sliderPopularMovies"></div>
+        <button class="nav-btn next" onclick="scrollSlider('sliderPopularMovies', 300)">&#10095;</button>
+      </div>
     </div>
 
-    <h2>🔥 Séries Populares</h2>
-    <div class="slider-container">
-      <button class="nav-btn prev" onclick="scrollSlider('sliderPopularTV', -300)">&#10094;</button>
-      <div class="slider" id="sliderPopularTV"></div>
-      <button class="nav-btn next" onclick="scrollSlider('sliderPopularTV', 300)">&#10095;</button>
+    <div class="category-section">
+      <h2>🔥 Séries Populares</h2>
+      <div class="slider-container">
+        <button class="nav-btn prev" onclick="scrollSlider('sliderPopularTV', -300)">&#10094;</button>
+        <div class="slider" id="sliderPopularTV"></div>
+        <button class="nav-btn next" onclick="scrollSlider('sliderPopularTV', 300)">&#10095;</button>
+      </div>
     </div>
 
-    <h2>🕒 Novos Filmes</h2>
-    <div class="slider-container">
-      <button class="nav-btn prev" onclick="scrollSlider('sliderRecentMovies', -300)">&#10094;</button>
-      <div class="slider" id="sliderRecentMovies"></div>
-      <button class="nav-btn next" onclick="scrollSlider('sliderRecentMovies', 300)">&#10095;</button>
+    <div class="category-section">
+      <h2>🕒 Novos Filmes</h2>
+      <div class="slider-container">
+        <button class="nav-btn prev" onclick="scrollSlider('sliderRecentMovies', -300)">&#10094;</button>
+        <div class="slider" id="sliderRecentMovies"></div>
+        <button class="nav-btn next" onclick="scrollSlider('sliderRecentMovies', 300)">&#10095;</button>
+      </div>
     </div>
 
-    <h2>🕒 Novas Séries</h2>
-    <div class="slider-container">
-      <button class="nav-btn prev" onclick="scrollSlider('sliderRecentTV', -300)">&#10094;</button>
-      <div class="slider" id="sliderRecentTV"></div>
-      <button class="nav-btn next" onclick="scrollSlider('sliderRecentTV', 300)">&#10095;</button>
+    <div class="category-section">
+      <h2>🕒 Novas Séries</h2>
+      <div class="slider-container">
+        <button class="nav-btn prev" onclick="scrollSlider('sliderRecentTV', -300)">&#10094;</button>
+        <div class="slider" id="sliderRecentTV"></div>
+        <button class="nav-btn next" onclick="scrollSlider('sliderRecentTV', 300)">&#10095;</button>
+      </div>
+    </div>
+
+    <div id="rec-movies-hist" style="display: none;">
+        <h2>👁️ Porque viste Filmes parecidos...</h2>
+        <div class="slider-container">
+            <button class="nav-btn prev" onclick="scrollSlider('sliderRecMoviesHist', -300)">&#10094;</button>
+            <div class="slider" id="sliderRecMoviesHist"></div>
+            <button class="nav-btn next" onclick="scrollSlider('sliderRecMoviesHist', 300)">&#10095;</button>
+        </div>
+    </div>
+
+    <div id="rec-series-hist" style="display: none;">
+        <h2>👁️ Porque viste Séries parecidas...</h2>
+        <div class="slider-container">
+            <button class="nav-btn prev" onclick="scrollSlider('sliderRecSeriesHist', -300)">&#10094;</button>
+            <div class="slider" id="sliderRecSeriesHist"></div>
+            <button class="nav-btn next" onclick="scrollSlider('sliderRecSeriesHist', 300)">&#10095;</button>
+        </div>
+    </div>
+
+    <div id="rec-movies-likes" style="display: none;">
+        <h2>❤️ Porque gostaste de Filmes como...</h2>
+        <div class="slider-container">
+            <button class="nav-btn prev" onclick="scrollSlider('sliderRecMoviesLikes', -300)">&#10094;</button>
+            <div class="slider" id="sliderRecMoviesLikes"></div>
+            <button class="nav-btn next" onclick="scrollSlider('sliderRecMoviesLikes', 300)">&#10095;</button>
+        </div>
+    </div>
+
+    <div id="rec-series-likes" style="display: none;">
+        <h2>❤️ Porque gostaste de Séries como...</h2>
+        <div class="slider-container">
+            <button class="nav-btn prev" onclick="scrollSlider('sliderRecSeriesLikes', -300)">&#10094;</button>
+            <div class="slider" id="sliderRecSeriesLikes"></div>
+            <button class="nav-btn next" onclick="scrollSlider('sliderRecSeriesLikes', 300)">&#10095;</button>
+        </div>
+    </div>
+
+    <div id="later-movies-section" class="category-section" style="display: none;">
+      <h2>🕒 Ver Mais Tarde - Filmes</h2>
+      <div class="slider-container">
+          <button class="nav-btn prev" onclick="scrollSlider('sliderLaterMovies', -300)">&#10094;</button>
+          <div class="slider" id="sliderLaterMovies"></div>
+          <button class="nav-btn next" onclick="scrollSlider('sliderLaterMovies', 300)">&#10095;</button>
+      </div>
+    </div>
+
+    <div id="later-series-section" class="category-section" style="display: none;">
+        <h2>🕒 Ver Mais Tarde - Séries</h2>
+        <div class="slider-container">
+            <button class="nav-btn prev" onclick="scrollSlider('sliderLaterTV', -300)">&#10094;</button>
+            <div class="slider" id="sliderLaterTV"></div>
+            <button class="nav-btn next" onclick="scrollSlider('sliderLaterTV', 300)">&#10095;</button>
+        </div>
     </div>
 
   </div>
@@ -48,8 +110,10 @@
     <div id="results-grid" class="grid-container"></div>
   </div>
 
+  <script type="module" src="assets/js/firebase-config.js"></script>
   <script type="module" src="assets/js/main.js"></script>
   <script type="module" src="assets/js/search.js"></script>
+  <script type="module" src="assets/js/auth.js"></script>
 
 </body>
 </html>

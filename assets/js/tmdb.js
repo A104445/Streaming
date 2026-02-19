@@ -86,3 +86,14 @@ export async function getRecentSeries() {
     return data.results; 
   } catch (e) { return []; }
 }
+
+export async function getRecommendationsByGenre(genreId, type) {
+  try {
+    const url = `https://api.themoviedb.org/3/discover/${type}?api_key=${TMDB_KEY}&with_genres=${genreId}&language=${LANG}&sort_by=popularity.desc&page=1`;      const res = await fetch(url);
+      const data = await res.json();
+      return data.results || [];
+  } catch (error) {
+      console.error("Erro recomendações:", error);
+      return [];
+  }
+}
