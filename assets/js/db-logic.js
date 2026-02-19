@@ -5,12 +5,27 @@ function getPath(uid, type, movieId, category) {
     return `users/${uid}/${category}/${type}_${movieId}`;
 }
 
+// --- FUNÇÃO AUXILIAR: MOSTRAR MODAL DE LOGIN ---
+function showLoginModal() {
+    const modal = document.getElementById('loginRequiredModal');
+    if (modal) {
+        modal.style.display = 'flex'; // Abre o modal bonito
+    } else {
+        // Prevenção caso o HTML do modal não esteja na página
+        alert("🔒 Precisas de iniciar sessão para usar esta funcionalidade.");
+        window.location.href = "login.html";
+    }
+}
+
 /**
  * 1. MARCAR COMO VISTO (Histórico)
  */
 export async function toggleVisto(filme) {
     const user = auth.currentUser;
-    if (!user) return alert("Faz login para guardar o histórico!");
+    if (!user) {
+        showLoginModal();
+        return false;
+    }
 
     const path = getPath(user.uid, filme.type, filme.id, 'history');
     const dbRef = ref(db, path);
@@ -38,7 +53,10 @@ export async function toggleVisto(filme) {
  */
 export async function toggleGosto(filme) {
     const user = auth.currentUser;
-    if (!user) return alert("Faz login para dar Like!");
+    if (!user) {
+        showLoginModal();
+        return false;
+    }
 
     const path = getPath(user.uid, filme.type, filme.id, 'likes');
     const dbRef = ref(db, path);
@@ -83,27 +101,23 @@ export async function verificarEstado(type, id) {
 }
 
 /**
- * 4. OBTER LISTA NEGRA (Vistos + Likes) - ATUALIZADO
- * Agora busca Vistos E Likes para não recomendar nada que já conheças.
+ * 4. OBTER LISTA NEGRA (Vistos + Likes)
  */
 export async function getWatchedIds() {
     const user = auth.currentUser;
     if (!user) return { movie: [], tv: [] };
 
     try {
-        // Busca Vistos e Likes ao mesmo tempo
         const [histSnap, likeSnap] = await Promise.all([
             get(child(ref(db), `users/${user.uid}/history`)),
             get(child(ref(db), `users/${user.uid}/likes`))
         ]);
 
-        // Usamos um Set para não haver duplicados e convertemos tudo para String
         const ignoredIds = { movie: new Set(), tv: new Set() };
 
         const processar = (snapshot) => {
             if (snapshot.exists()) {
                 Object.values(snapshot.val()).forEach(item => {
-                    // Força o ID a ser Texto (String) para comparar bem depois
                     if (item.type === 'movie') ignoredIds.movie.add(String(item.id));
                     if (item.type === 'tv') ignoredIds.tv.add(String(item.id));
                 });
@@ -113,7 +127,6 @@ export async function getWatchedIds() {
         processar(histSnap);
         processar(likeSnap);
 
-        // Converte de volta para Array
         return {
             movie: Array.from(ignoredIds.movie),
             tv: Array.from(ignoredIds.tv)
@@ -160,7 +173,10 @@ export async function getTopGenre(category, type) {
  */
 export async function toggleVerMaisTarde(filme) {
     const user = auth.currentUser;
-    if (!user) return alert("Faz login!");
+    if (!user) {
+        showLoginModal();
+        return false;
+    }
 
     const path = `users/${user.uid}/watchLater/${filme.type}_${filme.id}`;
     const dbRef = ref(db, path);
