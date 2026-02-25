@@ -1,4 +1,4 @@
-const BASE_URL = "https://vidsrc-embed.ru";
+const BASE_URL = "https://vsembed-embed.ru";
 
 export async function getLatestMovies(page = 1) {
   try {
