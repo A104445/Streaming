@@ -1,13 +1,18 @@
-export function headerTemplate() {
-  return `
-    <header class="header">
-      <div class="logo" onclick="window.location.href='index.html'">Picote<span style="color: white;">Flix</span></div>
-      
+export function headerTemplate(esconderFiltros = false) {
+
+  const navHTML = esconderFiltros ? '' : `
       <div class="nav-center">
           <button class="nav-icon active" onclick="filtrarCategoria('all', this)" title="Início">🏠</button>
           <button class="nav-icon" onclick="filtrarCategoria('movie', this)" title="Apenas Filmes">Filmes</button>
           <button class="nav-icon" onclick="filtrarCategoria('tv', this)" title="Apenas Séries">Séries</button>
       </div>
+  `;
+
+  return `
+    <header class="header">
+      <div class="logo" onclick="window.location.href='index.html'">Picote<span style="color: white;">Flix</span></div>
+      
+      ${navHTML}
 
       <div class="header-right">
         

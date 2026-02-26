@@ -44,39 +44,49 @@
 </head>
 <body>
 
-  <a href="index.html" class="back-btn">Voltar</a>
+    <div id="header-container"></div>
 
-  <div id="info-area" class="info-container">
-    <p style="padding:20px">A carregar detalhes...</p>
-  </div>
+    <div id="main-content">
 
-  <div id="controls-area" class="controls-area" style="display: none;">
-    <div class="series-bar">
-        <div class="control-group">
-            <label>Temporada</label>
-            <select id="season-select"></select>
+        <a href="index.html" class="back-btn">Voltar</a>
+
+        <div id="info-area" class="info-container">
+            <p style="padding:20px">A carregar detalhes...</p>
         </div>
-        <div class="control-group">
-            <label>Episódio</label>
-            <select id="episode-select"></select>
+
+        <div id="controls-area" class="controls-area" style="display: none;">
+            <div class="series-bar">
+                <div class="control-group">
+                    <label>Temporada</label>
+                    <select id="season-select"></select>
+                </div>
+                <div class="control-group">
+                    <label>Episódio</label>
+                    <select id="episode-select"></select>
+                </div>
+                <button class="btn-load" onclick="carregarVideo()">Ver Episódio</button>
+            </div>
         </div>
-        <button class="btn-load" onclick="carregarVideo()">Ver Episódio</button>
-    </div>
-  </div>
 
-  <div class="server-container">
-    <span class="server-label">Fonte do vídeo:</span>
-    <button class="server-btn active" onclick="mudarServidor(0)">Server 1</button>
-    <button class="server-btn" onclick="mudarServidor(1)">Server 2</button>
-    <button class="server-btn" onclick="mudarServidor(2)">Server 3</button>
-    <button class="server-btn" onclick="mudarServidor(3)">Server 4</button>
-  </div>
+        <div class="server-container">
+            <span class="server-label">Fonte do vídeo:</span>
+            <button class="server-btn active" onclick="mudarServidor(0)">Server 1</button>
+            <button class="server-btn" onclick="mudarServidor(1)">Server 2</button>
+            <button class="server-btn" onclick="mudarServidor(2)">Server 3</button>
+            <button class="server-btn" onclick="mudarServidor(3)">Server 4</button>
+        </div>
 
-  <div class="player-wrapper">
-    <div class="player-container">
-        <iframe id="video-player" allowfullscreen></iframe>
+        <div class="player-wrapper">
+            <div class="player-container">
+                <iframe id="video-player" allowfullscreen></iframe>
+            </div>
+        </div>
     </div>
-  </div>
+    
+    <div id="search-results" style="display: none; padding: 20px; margin-top: 30px;">
+        <h2>Resultados da Pesquisa</h2>
+        <div id="results-grid" class="grid-container"></div>
+    </div>
 
   <div id="loginRequiredModal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
@@ -98,6 +108,15 @@
     // --- NOVOS IMPORTS DA BASE DE DADOS ---
     import { toggleVisto, toggleGosto, toggleVerMaisTarde, verificarEstado } from "./assets/js/db-logic.js";
     import { auth, onAuthStateChanged } from "./assets/js/firebase-config.js";
+    import { headerTemplate } from "./assets/js/templates.js";
+    import "./assets/js/auth.js";   // Inicia a lógica do perfil
+    import "./assets/js/search.js"; // Inicia a lógica de pesquisa
+
+    // --- 2. INJETAR O CABEÇALHO (Passando o valor "true" para esconder o meio) ---
+    document.getElementById("header-container").innerHTML = headerTemplate(true);
+
+    // --- 3. FUNÇÃO GLOBAL PARA OS RESULTADOS DA PESQUISA FUNCIONAREM ---
+    window.openMovie = (id, type) => window.location.href = `watch.html?tmdb=${id}&type=${type}`;
 
     const params = new URLSearchParams(location.search);
     const tmdbId = params.get("tmdb");
@@ -111,12 +130,12 @@
     const serverBtns = document.querySelectorAll(".server-btn");
 
     const SERVERS = [
-        "https://vidsrc.vip/embed",  
-        "https://vidsrc.pro/embed",  
+        "https://vsembed.ru/embed",
+        "https://vidrock.net",  
         "https://vidsrc.xyz/embed",
-        "https://superembed.stream/embed"
+        "https://vsembed.su/embed"
     ];
-    
+
     let currentServerIndex = 0;
     let seasonsData = [];
     let currentMovieData = null; // Guardar dados para a BD
