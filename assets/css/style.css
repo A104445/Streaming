@@ -932,3 +932,69 @@ body {
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* =========================================
+   DROPDOWNS PERSONALIZADOS (Séries)
+========================================= */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+  min-width: 160px;
+  user-select: none;
+  cursor: pointer;
+}
+
+.dropdown-selected {
+  background: #112240;
+  border: 1px solid #d4af37; /* Contorno dourado */
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.dropdown-selected:hover {
+  background: #1a365d;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4); /* Brilho dourado suave */
+}
+
+.dropdown-selected::after {
+  content: "▼";
+  font-size: 0.7rem;
+  color: #d4af37; /* Setinha dourada a combinar */
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  right: 0;
+  background: #0a1a2f;
+  border: 1px solid #30475e;
+  border-radius: 5px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+}
+
+.dropdown-option {
+  padding: 10px 15px;
+  color: #ccc;
+  transition: all 0.2s;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dropdown-option:last-child {
+  border-bottom: none;
+}
+
+.dropdown-option:hover {
+  background: #30475e;
+  color: white;
+  padding-left: 20px; /* Efeito fixe de avançar ao passar o rato */
+}

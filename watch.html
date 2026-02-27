@@ -58,13 +58,24 @@
             <div class="series-bar">
                 <div class="control-group">
                     <label>Temporada</label>
-                    <select id="season-select"></select>
+                    <div class="custom-dropdown" id="season-dropdown" data-value="1">
+                        <div class="dropdown-selected" id="season-selected" onclick="toggleDropdown('season-options')">Temporada 1</div>
+                        <div class="dropdown-options" id="season-options" style="display: none;"></div>
+                    </div>
                 </div>
+                
                 <div class="control-group">
                     <label>Episódio</label>
-                    <select id="episode-select"></select>
+                    <div class="custom-dropdown" id="episode-dropdown" data-value="1">
+                        <div class="dropdown-selected" id="episode-selected" onclick="toggleDropdown('episode-options')">Episódio 1</div>
+                        <div class="dropdown-options" id="episode-options" style="display: none;"></div>
+                    </div>
                 </div>
-                <button class="btn-load" onclick="carregarVideo()">Ver Episódio</button>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-load" onclick="carregarVideo()">Ver Episódio</button>
+                    <button class="btn-load" style="background: #333; color: white; border: 1px solid #555;" onclick="proximoEpisodio()">Próximo ⏭️</button>
+                </div>
             </div>
         </div>
 
@@ -102,11 +113,26 @@
         </div>
     </div>
 </div>
+    <div id="endSeriesModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-icon">🎉</div>
+            <h2 class="modal-title">Série Concluída!</h2>
+            <p class="modal-text">
+                Chegaste ao fim desta série. Parabéns pela maratona! 🍿<br>
+                Que tal procurares algo novo para ver no PicoteFlix?
+            </p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="window.location.href='index.html'" class="modal-btn" style="background: #E50914; color: white;">Explorar Início</button>
+                <button onclick="window.fecharModalFimSerie()" class="modal-btn" style="background: #333; color: white;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
 
   <script type="module">
     import { getDetails } from "./assets/js/tmdb.js";
     // --- NOVOS IMPORTS DA BASE DE DADOS ---
-    import { toggleVisto, toggleGosto, toggleVerMaisTarde, verificarEstado } from "./assets/js/db-logic.js";
+    import { toggleVisto, toggleGosto, toggleVerMaisTarde, verificarEstado, saveProgress, getProgress } from "./assets/js/db-logic.js";
     import { auth, onAuthStateChanged } from "./assets/js/firebase-config.js";
     import { headerTemplate } from "./assets/js/templates.js";
     import "./assets/js/auth.js";   // Inicia a lógica do perfil
@@ -125,8 +151,6 @@
     const player = document.getElementById("video-player");
     const infoArea = document.getElementById("info-area");
     const controlsArea = document.getElementById("controls-area");
-    const seasonSelect = document.getElementById("season-select");
-    const episodeSelect = document.getElementById("episode-select");
     const serverBtns = document.querySelectorAll(".server-btn");
 
     const SERVERS = [
@@ -144,55 +168,31 @@
         if (!tmdbId) return window.location.href = 'index.html';
 
         const dados = await getDetails(tmdbId, type);
-        
-        if (!dados) {
-            infoArea.innerHTML = "<h2>Erro ao carregar detalhes.</h2>";
-            return;
-        }
+        if (!dados) return infoArea.innerHTML = "<h2>Erro ao carregar detalhes.</h2>";
 
-        // Preparar dados para o HTML e para a Base de Dados
         const titulo = dados.title || dados.name;
         const sinopse = dados.overview || "Sem sinopse.";
-        const poster = dados.poster_path 
-            ? `https://image.tmdb.org/t/p/w500${dados.poster_path}` 
-            : "https://placehold.co/200x300/1a1a1a/666666?text=Sem+Capa";
+        const poster = dados.poster_path ? `https://image.tmdb.org/t/p/w500${dados.poster_path}` : "https://placehold.co/200x300/1a1a1a/666666?text=Sem+Capa";
         const ano = (dados.release_date || dados.first_air_date || "").split("-")[0];
         const rating = dados.vote_average ? `⭐ ${dados.vote_average.toFixed(1)}` : "";
         const generosTexto = dados.genres ? dados.genres.map(g=>g.name).join(", ") : "";
 
-        // Guardar no objeto global para usar nos botões
-        currentMovieData = {
-            id: tmdbId,
-            title: titulo,
-            poster_path: dados.poster_path,
-            type: type,
-            genres: dados.genres ? dados.genres.map(g => g.id) : []
-        };
+        currentMovieData = { id: tmdbId, title: titulo, poster_path: dados.poster_path, type: type, genres: dados.genres ? dados.genres.map(g => g.id) : [] };
 
-        // INJETAR HTML (COM OS NOVOS BOTÕES)
         infoArea.innerHTML = `
             <img src="${poster}" class="poster-img" onerror="this.onerror=null;this.src='https://placehold.co/200x300/1a1a1a/666666?text=Erro';">
             <div class="details">
                 <h1>${titulo}</h1>
                 <div class="meta"><span>${ano}</span> • <span>${rating}</span> • <span>${generosTexto}</span></div>
-                
                 <div class="actions-container">
-                    <button id="btnVisto" class="action-btn">
-                        <span class="icon">👁️</span> <span class="text">Marcar Visto</span>
-                    </button>
-                    <button id="btnGosto" class="action-btn">
-                        <span class="icon">🤍</span> <span class="text">Gosto</span>
-                    </button>
-                    <button id="btnWatchLater" class="action-btn">
-                        <span class="icon">🕒</span> <span class="text">Ver Depois</span>
-                    </button>
+                    <button id="btnVisto" class="action-btn"><span class="icon">👁️</span> <span class="text">Marcar Visto</span></button>
+                    <button id="btnGosto" class="action-btn"><span class="icon">🤍</span> <span class="text">Gosto</span></button>
+                    <button id="btnWatchLater" class="action-btn"><span class="icon">🕒</span> <span class="text">Ver Depois</span></button>
                 </div>
-
                 <p>${sinopse}</p>
             </div>
         `;
 
-        // LIGAR OS EVENTOS AOS BOTÕES AGORA QUE ELES EXISTEM
         configurarBotoes();
 
         if (type === "movie") {
@@ -201,13 +201,48 @@
             controlsArea.style.display = "block";
             seasonsData = (dados.seasons || []).filter(s => s.season_number > 0);
             
-            seasonSelect.innerHTML = "";
+            // 1. PREENCHE AS TEMPORADAS NO NOVO MENU
+            const seasonOptions = document.getElementById("season-options");
+            seasonOptions.innerHTML = "";
             seasonsData.forEach(season => {
-                seasonSelect.innerHTML += `<option value="${season.season_number}">Temporada ${season.season_number}</option>`;
+                seasonOptions.innerHTML += `<div class="dropdown-option" onclick="selecionarTemporada(${season.season_number})">Temporada ${season.season_number}</div>`;
             });
 
-            seasonSelect.addEventListener("change", atualizarListaEpisodios);
-            atualizarListaEpisodios(); // Isto vai carregar o vídeo também
+            // 2. LER URL OU BASE DE DADOS PARA CONTINUAR A VER
+            let startSeason = params.get("s");
+            let startEpisode = params.get("e");
+
+            if (!startSeason || !startEpisode) {
+                // Fica à espera que o Firebase reconheça o utilizador
+                await new Promise(resolve => {
+                    const unsub = onAuthStateChanged(auth, user => {
+                        unsub();
+                        resolve(user);
+                    });
+                });
+
+                const progresso = await getProgress(tmdbId);
+                if (progresso) {
+                    startSeason = progresso.season;
+                    startEpisode = progresso.episode;
+                }
+            }
+
+            // 3. APLICAR O PROGRESSO AOS NOVOS BOTÕES DESENHADOS
+            // Se não houver nada guardado, assume Temp 1, Ep 1
+            startSeason = startSeason ? parseInt(startSeason) : (seasonsData.length > 0 ? seasonsData[0].season_number : 1);
+            startEpisode = startEpisode ? parseInt(startEpisode) : 1;
+
+            // Verifica se a temporada guardada realmente existe na série
+            if (seasonsData.find(s => s.season_number === startSeason)) {
+                // Atualiza o botão visual e o valor escondido!
+                document.getElementById("season-dropdown").dataset.value = startSeason;
+                document.getElementById("season-selected").innerText = `Temporada ${startSeason}`;
+            }
+
+            // 4. ATUALIZA OS EPISÓDIOS E ARRANCA O VÍDEO AUTOMATICAMENTE!
+            // Passa o episódio correto para a função e dá a ordem de Play (true)
+            atualizarListaEpisodios(startEpisode, true);
         }
     }
 
@@ -280,17 +315,74 @@
         });
     }
 
-    window.atualizarListaEpisodios = () => {
-        const tempSelecionada = parseInt(seasonSelect.value);
+    // ==========================================
+    // LÓGICA DOS NOVOS DROPDOWNS PERSONALIZADOS
+    // ==========================================
+    window.toggleDropdown = (id) => {
+        const el = document.getElementById(id);
+        const isVisible = el.style.display === "block";
+        
+        // Fecha todos antes de abrir
+        document.getElementById("season-options").style.display = "none";
+        document.getElementById("episode-options").style.display = "none";
+        
+        if (!isVisible) el.style.display = "block";
+    };
+
+    // Fechar ao clicar fora da lista
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".custom-dropdown")) {
+            const sOpts = document.getElementById("season-options");
+            const eOpts = document.getElementById("episode-options");
+            if(sOpts) sOpts.style.display = "none";
+            if(eOpts) eOpts.style.display = "none";
+        }
+    });
+
+    window.selecionarTemporada = (num) => {
+        document.getElementById("season-dropdown").dataset.value = num;
+        document.getElementById("season-selected").innerText = `Temporada ${num}`;
+        document.getElementById("season-options").style.display = "none";
+        atualizarListaEpisodios(1, true); // Volta ao ep 1 e arranca!
+    };
+
+    window.selecionarEpisodio = (num) => {
+        document.getElementById("episode-dropdown").dataset.value = num;
+        document.getElementById("episode-selected").innerText = `Episódio ${num}`;
+        document.getElementById("episode-options").style.display = "none";
+        
+        // A CORREÇÃO: Força o vídeo a carregar e a gravar na BD imediatamente!
+        carregarVideo(); 
+    };
+
+    // ==========================================
+    // ATUALIZAR, CARREGAR E PRÓXIMO EPISÓDIO
+    // ==========================================
+    window.atualizarListaEpisodios = (episodioInicial = null, autoPlay = true) => {
+        const tempSelecionada = parseInt(document.getElementById("season-dropdown").dataset.value);
         const dadosTemporada = seasonsData.find(s => s.season_number === tempSelecionada);
         
-        episodeSelect.innerHTML = "";
+        const episodeOptions = document.getElementById("episode-options");
+        episodeOptions.innerHTML = "";
+        
         if (dadosTemporada) {
+            // Cria os botões da lista de episódios
             for (let i = 1; i <= dadosTemporada.episode_count; i++) {
-                episodeSelect.innerHTML += `<option value="${i}">Episódio ${i}</option>`;
+                episodeOptions.innerHTML += `<div class="dropdown-option" onclick="selecionarEpisodio(${i})">Episódio ${i}</div>`;
             }
-            // Carregar automaticamente o episódio 1 ao mudar de temporada
-            carregarVideo();
+            
+            let epParaSelecionar = 1;
+            if (episodioInicial && episodioInicial <= dadosTemporada.episode_count) {
+                epParaSelecionar = episodioInicial;
+            }
+            
+            // Atualiza o texto visual e o valor escondido
+            document.getElementById("episode-dropdown").dataset.value = epParaSelecionar;
+            document.getElementById("episode-selected").innerText = `Episódio ${epParaSelecionar}`;
+            
+            if (autoPlay) {
+                carregarVideo();
+            }
         }
     };
 
@@ -301,13 +393,40 @@
         if (type === "movie") {
             urlFinal = `${baseUrl}/movie/${tmdbId}`;
         } else {
-            const s = seasonSelect.value;
-            const e = episodeSelect.value;
+            const s = document.getElementById("season-dropdown").dataset.value;
+            const e = document.getElementById("episode-dropdown").dataset.value;
             urlFinal = `${baseUrl}/tv/${tmdbId}/${s}/${e}`;
+            
+            const novaUrl = `${window.location.pathname}?tmdb=${tmdbId}&type=tv&s=${s}&e=${e}`;
+            window.history.replaceState({}, "", novaUrl);
+
+            saveProgress(tmdbId, s, e);
         }
         
         player.src = urlFinal;
-        console.log("A carregar de:", baseUrl);
+    };
+
+    window.proximoEpisodio = () => {
+        let s = parseInt(document.getElementById("season-dropdown").dataset.value);
+        let e = parseInt(document.getElementById("episode-dropdown").dataset.value);
+        const dadosTemporada = seasonsData.find(ts => ts.season_number === s);
+        
+        if (dadosTemporada && e < dadosTemporada.episode_count) {
+            // Atualiza para o próximo episódio
+            document.getElementById("episode-dropdown").dataset.value = e + 1;
+            document.getElementById("episode-selected").innerText = `Episódio ${e + 1}`;
+            carregarVideo();
+        } else {
+            const proximaTemp = seasonsData.find(ts => ts.season_number === s + 1);
+            if (proximaTemp) {
+                document.getElementById("season-dropdown").dataset.value = s + 1;
+                document.getElementById("season-selected").innerText = `Temporada ${s + 1}`;
+                atualizarListaEpisodios(1, true); 
+            } else {
+                const modalFim = document.getElementById('endSeriesModal');
+                if (modalFim) modalFim.style.display = 'flex';
+            }
+        }
     };
 
     window.mudarServidor = (index) => {
@@ -321,6 +440,13 @@
 
     window.fecharModalLogin = () => {
           const modal = document.getElementById('loginRequiredModal');
+          if (modal) {
+              modal.style.display = 'none';
+          }
+      };
+
+    window.fecharModalFimSerie = () => {
+          const modal = document.getElementById('endSeriesModal');
           if (modal) {
               modal.style.display = 'none';
           }

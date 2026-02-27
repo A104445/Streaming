@@ -225,3 +225,56 @@ export async function getFullHistory(category) {
         };
     } catch (error) { return { movie: [], tv: [] }; }
 }
+
+/**
+ * 8. PROGRESSO DE SÉRIES (Continuar a Ver)
+ */
+export async function saveProgress(id, season, episode) {
+    const user = auth.currentUser;
+    if (!user) return; // Se não tiver conta, não faz nada
+    
+    const dbRef = ref(db, `users/${user.uid}/progress/tv_${id}`);
+    
+    // 1. LER O PROGRESSO ATUAL PRIMEIRO
+    const snapshot = await get(dbRef);
+    let deveGravar = true;
+
+    if (snapshot.exists()) {
+        const progressoAtual = snapshot.val();
+        
+        const sAtual = parseInt(progressoAtual.season);
+        const eAtual = parseInt(progressoAtual.episode);
+        const sNovo = parseInt(season);
+        const eNovo = parseInt(episode);
+
+        // 2. LÓGICA DE COMPARAÇÃO:
+        // Se a temporada nova for mais antiga, NÃO GRAVA.
+        if (sNovo < sAtual) {
+            deveGravar = false;
+        } 
+        // Se for a mesma temporada, mas um episódio igual ou mais antigo, NÃO GRAVA.
+        else if (sNovo === sAtual && eNovo <= eAtual) {
+            deveGravar = false;
+        }
+    }
+
+    // 3. SE FOR MAIS AVANÇADO (ou se for a primeira vez), GRAVA!
+    if (deveGravar) {
+        await set(dbRef, {
+            season: parseInt(season),
+            episode: parseInt(episode),
+            timestamp: Date.now()
+        });
+    }
+}
+
+export async function getProgress(id) {
+    const user = auth.currentUser;
+    if (!user) return null;
+
+    const snapshot = await get(ref(db, `users/${user.uid}/progress/tv_${id}`));
+    if (snapshot.exists()) {
+        return snapshot.val();
+    }
+    return null;
+}
