@@ -36,37 +36,55 @@ setTimeout(() => {
         });
     }
 
-    // 3. ESTADO DO UTILIZADOR (AQUI ESTÁ A MUDANÇA DA FOTO)
-    onAuthStateChanged(auth, (user) => {
-        // Se os elementos ainda não existirem, não faz nada
-        if (!loginBtn || !profileArea) return;
-
-        if (user) {
-            // --- UTILIZADOR LOGADO ---
-            loginBtn.style.display = "none";
-            profileArea.style.display = "block";
-
-            // Tentar carregar foto da Base de Dados (Realtime DB)
-            const avatarRef = ref(db, 'users/' + user.uid + '/avatar');
-            
-            onValue(avatarRef, (snapshot) => {
-                const fotoDb = snapshot.val();
-                if (userAvatar) {
-                    if (fotoDb) {
-                        userAvatar.src = fotoDb; // Usa a foto personalizada
-                    } else {
-                        // Se não tiver foto na DB, usa a do Google ou o boneco
-                        userAvatar.src = user.photoURL || "assets/img/default-user.png";
-                    }
-                }
-            });
-
-        } else {
-            // --- NÃO LOGADO ---
-            loginBtn.style.display = "block";
-            profileArea.style.display = "none";
-            if (dropdownMenu) dropdownMenu.classList.remove("show");
+    // 2. OUVINTE DE ESTADO DE AUTENTICAÇÃO (O "Olheiro" do Firebase)
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // Utilizador com sessão iniciada
+        if (loginBtn) loginBtn.style.display = "none";
+        if (profileArea) profileArea.style.display = "block";
+        
+        // Opcional: Colocar a foto de perfil do Google se existir
+        if (user.photoURL && userAvatar) {
+            userAvatar.src = user.photoURL;
         }
-    });
+
+        // --- MODO VIP: TEMA DA PRIMA 🌸 ---
+        // (Só executa se alguém estiver logado e se o email for o dela)
+        const emailDaPrima = "marquesmariaines2@gmail.com"; 
+        
+        if (user.email === emailDaPrima) {
+            // Muda o fundo para o degradê rosa
+            document.body.style.background = "linear-gradient(to bottom, #ad1457, #4a0024)";
+            document.body.style.backgroundAttachment = "fixed";
+
+            // Muda a cor das letras para se conseguir ler
+            document.body.style.color = "#1a1a1a";
+
+            // Muda o cabeçalho lá de cima
+            const header = document.querySelector(".header");
+            if (header) {
+                header.style.background = "#880e4f"; 
+                header.style.borderBottom = "2px solid #310014";
+            }
+            
+            console.log("🌸 Modo VIP ativado!");
+        }
+        // ----------------------------------
+
+    } else {
+        // Ninguém tem sessão iniciada
+        if (loginBtn) loginBtn.style.display = "block";
+        if (profileArea) profileArea.style.display = "none";
+        
+        // Se a prima fizer logout, podemos querer limpar o rosa (volta ao estilo padrão do CSS)
+        document.body.style.background = "";
+        document.body.style.color = "";
+        const header = document.querySelector(".header");
+        if (header) {
+            header.style.background = "";
+            header.style.borderBottom = "";
+        }
+    }
+});
 
 }, 500);
