@@ -50,26 +50,45 @@ onAuthStateChanged(auth, (user) => {
 
         // --- MODO VIP: TEMA DA PRIMA 🌸 ---
         // (Só executa se alguém estiver logado e se o email for o dela)
-        const emailDaPrima = "marquesmariaines2@gmail.com"; 
+        const emailDaPrima = "alexandre.marques.98765@gmail.com"; 
         
         if (user.email === emailDaPrima) {
-            // Muda o fundo para o degradê rosa
-            document.body.style.background = "linear-gradient(to bottom, #ad1457, #4a0024)";
+            // Descobre o dia de hoje
+            const diaHoje = new Date().getDate();
+            const diaEPar = (diaHoje % 2 === 0);
+
+            let corFundo, corCabecalho, corBorda;
+
+            if (diaEPar) {
+                // --- DIAS PARES (ROSA) ---
+                // Cabeçalho muito escuro (Vinho), Fundo um pouco mais claro (Rosa Forte)
+                corCabecalho = "#880e4f"; 
+                corBorda = "#4a0024";
+                corFundo = "linear-gradient(to bottom, #c2185b, #ad1457)"; 
+            } else {
+                // --- DIAS ÍMPARES (TURQUESA) ---
+                // Cabeçalho muito escuro (Teal Profundo), Fundo um pouco mais claro (Turquesa Forte)
+                corCabecalho = "#004d40"; 
+                corBorda = "#00251a";
+                corFundo = "linear-gradient(to bottom, #00796b, #00695c)"; 
+            }
+
+            // 1. Aplica o fundo dinâmico
+            document.body.style.background = corFundo;
             document.body.style.backgroundAttachment = "fixed";
+            
+            // 2. Cor das letras (Branco puro para contraste máximo nos títulos)
+            document.body.style.color = "#ffffff";
 
-            // Muda a cor das letras para se conseguir ler
-            document.body.style.color = "#1a1a1a";
-
-            // Muda o cabeçalho lá de cima
+            // 3. Aplica o cabeçalho escuro
             const header = document.querySelector(".header");
             if (header) {
-                header.style.background = "#880e4f"; 
-                header.style.borderBottom = "2px solid #310014";
+                header.style.background = corCabecalho; 
+                header.style.borderBottom = `2px solid ${corBorda}`;
             }
             
-            console.log("🌸 Modo VIP ativado!");
+            console.log(`✨ Modo VIP ativado! Dia ${diaHoje}: Tema ${diaEPar ? 'Rosa' : 'Turquesa'}.`);
         }
-        // ----------------------------------
 
     } else {
         // Ninguém tem sessão iniciada
