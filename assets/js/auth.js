@@ -36,7 +36,7 @@ setTimeout(() => {
         });
     }
 
-    // 2. OUVINTE DE ESTADO DE AUTENTICAÇÃO (O "Olheiro" do Firebase)
+// 2. OUVINTE DE ESTADO DE AUTENTICAÇÃO (O "Olheiro" do Firebase)
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // Utilizador com sessão iniciada
@@ -48,54 +48,59 @@ onAuthStateChanged(auth, (user) => {
             userAvatar.src = user.photoURL;
         }
 
-        // --- MODO VIP: TEMA DA PRIMA 🌸 ---
-        // (Só executa se alguém estiver logado e se o email for o dela)
-        const emailDaPrima = "marquesmariaines2@gmail.com"; 
-        
-        if (user.email === emailDaPrima) {
-            // Descobre o dia de hoje
-            const diaHoje = new Date().getDate();
-            const diaEPar = (diaHoje % 2 === 0);
-
-            let corFundo, corCabecalho, corBorda;
-
-            if (diaEPar) {
-                // --- DIAS PARES (ROSA) ---
-                // Cabeçalho muito escuro (Vinho), Fundo um pouco mais claro (Rosa Forte)
-                corCabecalho = "#880e4f"; 
-                corBorda = "#4a0024";
-                corFundo = "linear-gradient(to bottom, #c2185b, #ad1457)"; 
-            } else {
-                // --- DIAS ÍMPARES (TURQUESA) ---
-                // Cabeçalho muito escuro (Teal Profundo), Fundo um pouco mais claro (Turquesa Forte)
-                corCabecalho = "#004d40"; 
-                corBorda = "#00251a";
-                corFundo = "linear-gradient(to bottom, #00796b, #00695c)"; 
+        // =========================================================
+        // --- NOVO SISTEMA DE CONTAS VIP (Cores Personalizadas) ---
+        // =========================================================
+        const vipThemes = {
+            "marquesmariaines2@gmail.com": {
+                // Tema Turquesa (Prima)
+                fundo: "linear-gradient(to bottom, #00796b, #00695c)", 
+                cabecalho: "#004d40",
+                borda: "#00251a",
+                texto: "#ffffff"
+            },
+            "mariapmoreira006@gmail.com": { 
+                // Tema Rosa
+                fundo: "linear-gradient(to bottom, #ad1457, #4a0024)", 
+                cabecalho: "#880e4f",
+                borda: "#310014",
+                texto: "#ffffff"
             }
+        };
 
-            // 1. Aplica o fundo dinâmico
-            document.body.style.background = corFundo;
+        const userTheme = vipThemes[user.email];
+
+        if (userTheme) {
+            // Aplica as cores VIP
+            document.body.style.background = userTheme.fundo;
             document.body.style.backgroundAttachment = "fixed";
-            
-            // 2. Cor das letras (Branco puro para contraste máximo nos títulos)
-            document.body.style.color = "#ffffff";
+            document.body.style.color = userTheme.texto;
 
-            // 3. Aplica o cabeçalho escuro
             const header = document.querySelector(".header");
             if (header) {
-                header.style.background = corCabecalho; 
-                header.style.borderBottom = `2px solid ${corBorda}`;
+                header.style.background = userTheme.cabecalho; 
+                header.style.borderBottom = `2px solid ${userTheme.borda}`;
             }
+            console.log("✨ Tema personalizado carregado para: " + user.email);
             
-            console.log(`✨ Modo VIP ativado! Dia ${diaHoje}: Tema ${diaEPar ? 'Rosa' : 'Turquesa'}.`);
+        } else {
+            // Se NÃO for VIP, garante as cores originais do site
+            document.body.style.background = "";
+            document.body.style.color = "";
+            const header = document.querySelector(".header");
+            if (header) {
+                header.style.background = "";
+                header.style.borderBottom = "";
+            }
         }
+        // =========================================================
 
     } else {
         // Ninguém tem sessão iniciada
         if (loginBtn) loginBtn.style.display = "block";
         if (profileArea) profileArea.style.display = "none";
         
-        // Se a prima fizer logout, podemos querer limpar o rosa (volta ao estilo padrão do CSS)
+        // Limpa as cores quando alguém faz logout
         document.body.style.background = "";
         document.body.style.color = "";
         const header = document.querySelector(".header");
