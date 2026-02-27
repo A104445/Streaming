@@ -50,7 +50,7 @@ onAuthStateChanged(auth, (user) => {
 
         // --- MODO VIP: TEMA DA PRIMA 🌸 ---
         // (Só executa se alguém estiver logado e se o email for o dela)
-        const emailDaPrima = "alexandre.marques.98765@gmail.com"; 
+        const emailDaPrima = "marquesmariaines2@gmail.com"; 
         
         if (user.email === emailDaPrima) {
             // Descobre o dia de hoje
