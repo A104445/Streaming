@@ -65,7 +65,13 @@ onAuthStateChanged(auth, (user) => {
                 cabecalho: "#880e4f",
                 borda: "#310014",
                 texto: "#ffffff"
-            }
+            },
+            "caroliinapinto12@gmail.com": {
+                fundo: "linear-gradient(to bottom, #1b5e20, #003300)", 
+                cabecalho: "#0a3d0a",
+                borda: "#001a00",
+                texto: "#ffffff"
+            },
         };
 
         const userTheme = vipThemes[user.email];
