@@ -71,7 +71,7 @@ onAuthStateChanged(auth, (user) => {
                 cabecalho: "#0a3d0a",
                 borda: "#001a00",
                 texto: "#ffffff"
-            },
+            }
         };
 
         const userTheme = vipThemes[user.email];
