@@ -1,0 +1,21 @@
+{
+    "name": "PicoteFlix",
+    "short_name": "PicoteFlix",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#0a1a2f",
+    "theme_color": "#0a1a2f",
+    "description": "A tua plataforma de streaming pessoal",
+    "icons": [
+    {
+      "src": "/assets/img/LogoPicoteFlix192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/img/LogoPicoteFlix512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+    ]
+  }

@@ -6,7 +6,11 @@
   <title>PicoteFlix</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
   <link rel="stylesheet" href="assets/css/style.css">
-</head>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a1a2f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/assets/img/LogoPicoteFlix192.png"></head>
 <body>
 
   <div id="header-container"></div>
@@ -114,6 +118,16 @@
   <script type="module" src="assets/js/main.js"></script>
   <script type="module" src="assets/js/search.js"></script>
   <script type="module" src="assets/js/auth.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('PWA ativa! Service Worker registado.', reg))
+                .catch(err => console.error('Erro na PWA:', err));
+        });
+    }
+  </script>
 
 </body>
 </html>

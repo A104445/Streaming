@@ -117,4 +117,26 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// ==========================================
+// AUTO-AJUSTE DO CABEÇALHO GLOBAL (Para todas as páginas)
+// ==========================================
+function ajustarEspacoCabecalho() {
+    const header = document.querySelector('.header');
+    if (header) {
+        // Mede a altura exata do cabeçalho
+        const alturaCabecalho = header.offsetHeight;
+        // Empurra a página para baixo com essa medida (+20px de margem)
+        document.body.style.paddingTop = (alturaCabecalho + 20) + 'px';
+    }
+}
+
+// 1. Tenta ajustar logo (com um ligeiro atraso para dar tempo de desenhar o HTML)
+setTimeout(ajustarEspacoCabecalho, 100);
+
+// 2. Garante o ajuste quando a página acaba de carregar totalmente
+window.addEventListener('load', ajustarEspacoCabecalho);
+
+// 3. Reajusta se a pessoa virar o telemóvel na horizontal ou redimensionar a janela
+window.addEventListener('resize', ajustarEspacoCabecalho);
+
 }, 500);
