@@ -139,4 +139,50 @@ window.addEventListener('load', ajustarEspacoCabecalho);
 // 3. Reajusta se a pessoa virar o telemóvel na horizontal ou redimensionar a janela
 window.addEventListener('resize', ajustarEspacoCabecalho);
 
+// ==========================================
+// LÓGICA DO POP-UP DE INSTALAÇÃO DA PWA
+// ==========================================
+let deferredPrompt; // Variável para guardar o evento secreto do navegador
+const installModal = document.getElementById('installAppModal');
+const installBtn = document.getElementById('btnInstallConfirm');
+
+// 1. O navegador avisa que a App cumpre os requisitos para ser instalada
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Impede o navegador de mostrar aquela mini-barra chata no fundo do ecrã
+    e.preventDefault();
+    // Guarda o evento na nossa variável para usarmos depois
+    deferredPrompt = e;
+    
+    // Mostra o nosso Pop-up bonito (se ele estiver nesta página)
+    if (installModal) {
+        // Mostramos com 'flex' porque é assim que os teus modals estão centrados no CSS
+        installModal.style.display = 'flex'; 
+    }
+});
+
+// 2. Quando o utilizador clica no nosso botão vermelho "Instalar Agora"
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        // Esconde o nosso pop-up
+        installModal.style.display = 'none';
+        
+        // Dispara a janela OFICIAL de instalação do telemóvel (aquela do sistema)
+        deferredPrompt.prompt();
+        
+        // Espera para ver se a pessoa clicou em "Aceitar" ou "Cancelar" na janela do sistema
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Resultado da instalação: ${outcome}`);
+        
+        // Limpa a variável porque já não pode ser usada novamente
+        deferredPrompt = null;
+    });
+}
+
+// 3. (Opcional) Se a pessoa instalar com sucesso, podemos agradecer!
+window.addEventListener('appinstalled', () => {
+    console.log('Parabéns! O PicoteFlix foi instalado com sucesso!');
+    // Podes esconder o pop-up aqui por precaução
+    if (installModal) installModal.style.display = 'none';
+});
+
 }, 500);
