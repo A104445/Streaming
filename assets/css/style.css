@@ -1008,3 +1008,89 @@
   color: white;
   padding-left: 20px; /* Efeito fixe de avançar ao passar o rato */
 }
+
+/* =========================================
+   DESIGN DA PÁGINA DE PLANOS
+========================================= */
+.plans-wrapper {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.plans-wrapper h2 {
+  color: var(--gold);
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+  border: none;
+  padding: 0;
+}
+
+.plans-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.plan-card {
+  background: #112240;
+  border: 2px solid #30475e;
+  border-radius: 15px;
+  padding: 30px;
+  width: 320px;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Quando o cartão é o selecionado */
+.plan-card.active-plan {
+  border-color: var(--gold);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+  transform: scale(1.05); /* Fica ligeiramente maior */
+}
+
+.plan-icon {
+  font-size: 4rem;
+  margin: 20px 0;
+}
+
+.plan-card h3 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: white;
+}
+
+.plan-card p {
+  color: #ccc;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  flex-grow: 1; /* Empurra o botão para o fundo */
+}
+
+.btn-plan {
+  background: transparent;
+  color: var(--gold);
+  border: 2px solid var(--gold);
+  padding: 12px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+
+.btn-plan:hover {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+/* Cor do botão quando está ativo */
+.plan-card.active-plan .btn-plan {
+  background: var(--gold);
+  color: var(--bg);
+}

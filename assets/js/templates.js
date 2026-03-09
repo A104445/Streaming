@@ -24,7 +24,8 @@ export function headerTemplate(esconderFiltros = false) {
             <img id="userAvatar" class="user-avatar" src="assets/img/default-avatar-profile-icon-social-media-user-vector-default-avatar-profile-icon-social-media-user-vector-portrait-176194876.webp" alt="Perfil" onclick="toggleProfileMenu()">            
             <div id="dropdownMenu" class="dropdown-menu">
                 <div class="dropdown-header">Olá!</div>
-                <a href="profile.html" class="dropdown-item">O meu Perfil</a>
+                <a href="profile.html" class="dropdown-item">👤 O meu Perfil</a>
+                <a href="plans.html" class="dropdown-item">💎 Os Meus Planos</a>
                 <a href="history.html" class="dropdown-item">📜 Histórico</a>
                 
                 <div class="dropdown-divider"></div>

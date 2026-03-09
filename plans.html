@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PicoteFlix</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <a href="index.html" class="back-btn" style="margin: 30px 0 0 30px;">Voltar ao Início</a>
+
+    <div class="plans-wrapper">
+        <h2>Escolhe o teu Plano</h2>
+        <p style="color: #aaa; margin-bottom: 40px;">Adapta a experiência do PicoteFlix ao teu estilo de vida.</p>
+        
+        <div class="plans-container">
+            <div class="plan-card" id="card-padrao">
+                <h3>Plano Padrão</h3>
+                <div class="plan-icon">🍿</div>
+                <p>Maratonas clássicas sem interrupções. Assiste aos teus filmes e séries favoritos as horas que quiseres.</p>
+                <button class="btn-plan" onclick="pedirConfirmacaoPlano('padrao')">Selecionar Padrão</button>
+            </div>
+
+            <div class="plan-card" id="card-fit">
+                <h3>Plano Fit</h3>
+                <div class="plan-icon">💪</div>
+                <p>Cuida da tua saúde enquanto vês TV! O vídeo bloqueia a cada 20 minutos para fazeres um exercício rápido.</p>
+                <button class="btn-plan" onclick="pedirConfirmacaoPlano('fit')">Selecionar Fit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="planConfirmModal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <h2 class="modal-title">Confirmar Alteração</h2>
+            <p id="planConfirmText" class="modal-text">Tens a certeza que queres mudar de plano?</p>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                <button id="btnConfirmPlan" class="modal-btn" style="background: var(--gold); color: var(--bg); font-weight: bold;">Sim, Mudar</button>
+                <button onclick="fecharModalConfirmacao()" class="modal-btn" style="background: #333; color: white;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="planSuccessModal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-box">
+            <div class="modal-icon">✅</div>
+            <h2 class="modal-title">Plano Atualizado!</h2>
+            <p id="planSuccessText" class="modal-text">Mudaste com sucesso para o novo plano.</p>
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <button onclick="fecharModalPlanos()" class="modal-btn" style="background: var(--gold); color: var(--bg); font-weight: bold;">Espetáculo!</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import "./assets/js/auth.js"; 
+
+        let planoAtual = localStorage.getItem('picoteflix_plano') || 'padrao';
+        let planoPendente = null; // Guarda o plano temporariamente até a pessoa confirmar
+        
+        function atualizarVisual() {
+            // Limpa todos os cartões e reativa os botões primeiro
+            document.querySelectorAll('.plan-card').forEach(card => card.classList.remove('active-plan'));
+            document.querySelectorAll('.btn-plan').forEach(btn => {
+                btn.innerText = 'Selecionar';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            });
+            
+            // Pinta o novo cartão ativo
+            const cardAtivo = document.getElementById('card-' + planoAtual);
+            if (cardAtivo) cardAtivo.classList.add('active-plan');
+            
+            // Altera o texto do botão atual e DESATIVA O CLIQUE
+            const btnAtivo = document.querySelector('#card-' + planoAtual + ' .btn-plan');
+            if (btnAtivo) {
+                btnAtivo.innerText = 'Plano Atual Ativo';
+                btnAtivo.disabled = true;
+                btnAtivo.style.opacity = '0.5'; // Deixa o botão mais transparente
+                btnAtivo.style.cursor = 'not-allowed'; // Muda o rato para o ícone de bloqueado
+            }
+        }
+
+        // 2. Quando a pessoa clica em Selecionar (Abre a confirmação)
+        window.pedirConfirmacaoPlano = (novoPlano) => {
+            if (novoPlano === planoAtual) return; // Se por magia clicar no plano atual, não faz nada
+            
+            planoPendente = novoPlano;
+            const modal = document.getElementById('planConfirmModal');
+            const textoConfirm = document.getElementById('planConfirmText');
+            
+            const nomePlano = novoPlano === 'fit' ? 'Plano Fit 💪' : 'Plano Padrão 🍿';
+            textoConfirm.innerHTML = `Estás prestes a ativar o <strong>${nomePlano}</strong>.<br>Tens a certeza?`;
+            
+            modal.style.display = 'flex';
+        };
+
+        // 3. Fechar a confirmação (Botão Cancelar)
+        window.fecharModalConfirmacao = () => {
+            document.getElementById('planConfirmModal').style.display = 'none';
+            planoPendente = null;
+        };
+
+        // 4. Executar a mudança (Botão Sim, Mudar)
+        document.getElementById('btnConfirmPlan').addEventListener('click', () => {
+            if(planoPendente) {
+                // Guarda na memória
+                localStorage.setItem('picoteflix_plano', planoPendente);
+                planoAtual = planoPendente;
+                
+                // Atualiza as cores do ecrã
+                atualizarVisual();
+                
+                // Fecha a confirmação
+                fecharModalConfirmacao();
+                
+                // Mostra o Modal de Sucesso
+                const modalSuccess = document.getElementById('planSuccessModal');
+                const modalText = document.getElementById('planSuccessText');
+                
+                if (planoAtual === 'fit') {
+                    modalText.innerHTML = "Mudaste com sucesso para o <strong>Plano Fit 💪</strong>.<br>Prepara-te para suar e cuidar de ti!";
+                } else {
+                    modalText.innerHTML = "Mudaste com sucesso para o <strong>Plano Padrão 🍿</strong>.<br>Prepara as pipocas e boas maratonas!";
+                }
+                
+                modalSuccess.style.display = 'flex';
+            }
+        });
+
+        // Fechar o Modal de Sucesso
+        window.fecharModalPlanos = () => {
+            const modal = document.getElementById('planSuccessModal');
+            if(modal) modal.style.display = 'none';
+        };
+
+        // Corre a pintura inicial assim que a página abre
+        atualizarVisual();
+    </script>
+
+</body>
+</html>
