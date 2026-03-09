@@ -278,3 +278,35 @@ export async function getProgress(id) {
     }
     return null;
 }
+
+/**
+ * 9. GESTÃO DE PLANOS (Standard / Fit / etc)
+ */
+export async function salvarPlanoDB(planoId) {
+    const user = auth.currentUser;
+    if (!user) return false; // Se não tem conta, ignora
+    
+    try {
+        await set(ref(db, `users/${user.uid}/plano`), planoId);
+        return true;
+    } catch (error) {
+        console.error("Erro ao guardar plano na BD:", error);
+        return false;
+    }
+}
+
+export async function obterPlanoDB() {
+    const user = auth.currentUser;
+    if (!user) return 'padrao';
+
+    try {
+        const snapshot = await get(ref(db, `users/${user.uid}/plano`));
+        if (snapshot.exists()) {
+            return snapshot.val();
+        }
+        return 'padrao';
+    } catch (error) {
+        console.error("Erro ao obter plano da BD:", error);
+        return 'padrao';
+    }
+}

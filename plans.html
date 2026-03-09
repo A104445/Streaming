@@ -57,6 +57,7 @@
 
     <script type="module">
         import "./assets/js/auth.js"; 
+        import { salvarPlanoDB } from "./assets/js/db-logic.js";
 
         let planoAtual = localStorage.getItem('picoteflix_plano') || 'padrao';
         let planoPendente = null; // Guarda o plano temporariamente até a pessoa confirmar
@@ -106,10 +107,14 @@
         };
 
         // 4. Executar a mudança (Botão Sim, Mudar)
-        document.getElementById('btnConfirmPlan').addEventListener('click', () => {
+        document.getElementById('btnConfirmPlan').addEventListener('click', async () => {
             if(planoPendente) {
-                // Guarda na memória
+                // Guarda na memória do aparelho
                 localStorage.setItem('picoteflix_plano', planoPendente);
+                
+                // NOVO: Guarda na nuvem (Firebase) para sincronizar em todo o lado!
+                await salvarPlanoDB(planoPendente);
+                
                 planoAtual = planoPendente;
                 
                 // Atualiza as cores do ecrã

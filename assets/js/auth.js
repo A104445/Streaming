@@ -1,4 +1,4 @@
-import { auth, signOut, onAuthStateChanged, db, ref, onValue } from "./firebase-config.js";
+import { auth, signOut, onAuthStateChanged, db, ref, onValue, get } from "./firebase-config.js";
 
 setTimeout(() => {
     // Selecionar elementos
@@ -100,6 +100,18 @@ onAuthStateChanged(auth, (user) => {
             }
         }
         // =========================================================
+        // SINCRONIZAR O PLANO DA BASE DE DADOS
+        // =========================================================
+        get(ref(db, `users/${user.uid}/plano`)).then((snapshot) => {
+            if (snapshot.exists()) {
+                // Se ele tem um plano guardado na BD, aplicamos no telemóvel atual
+                localStorage.setItem('picoteflix_plano', snapshot.val());
+                console.log("💎 Plano sincronizado da nuvem: ", snapshot.val());
+            } else {
+                // Se a pessoa acabou de criar conta, garante que fica Padrão
+                localStorage.setItem('picoteflix_plano', 'padrao');
+            }
+        });
 
     } else {
         // Ninguém tem sessão iniciada
