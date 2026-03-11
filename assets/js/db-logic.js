@@ -310,3 +310,44 @@ export async function obterPlanoDB() {
         return 'padrao';
     }
 }
+
+export async function obterTodoOProgresso() {
+    const user = auth.currentUser;
+    if (!user) return [];
+
+    try {
+        const snapshot = await get(ref(db, `users/${user.uid}/progress`));
+        if (!snapshot.exists()) return [];
+
+        const progresso = snapshot.val();
+        
+        // Converte o objeto da BD para um array e ordena do visto mais recentemente para o mais antigo
+        return Object.keys(progresso).map(chave => {
+            const id = chave.replace('tv_', ''); // Retira o prefixo
+            return {
+                id: id,
+                type: 'tv',
+                season: progresso[chave].season,
+                episode: progresso[chave].episode,
+                timestamp: progresso[chave].timestamp
+            };
+        }).sort((a, b) => b.timestamp - a.timestamp);
+    } catch (error) {
+        console.error("Erro ao obter lista de progresso:", error);
+        return [];
+    }
+}
+
+export async function removerProgresso(id) {
+    const user = auth.currentUser;
+    if (!user) return false;
+
+    try {
+        // Vai diretamente à pasta deste utilizador e apaga o registo desta série
+        await remove(ref(db, `users/${user.uid}/progress/tv_${id}`));
+        return true;
+    } catch (error) {
+        console.error("Erro ao remover progresso:", error);
+        return false;
+    }
+}

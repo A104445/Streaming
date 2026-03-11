@@ -228,19 +228,22 @@
                 seasonOptions.innerHTML += `<div class="dropdown-option" onclick="selecionarTemporada(${season.season_number})">Temporada ${season.season_number}</div>`;
             });
 
+            // ==========================================
+            // A CORREÇÃO ESTÁ AQUI: ESPERA SEMPRE PELO LOGIN!
+            // ==========================================
+            await new Promise(resolve => {
+                const unsub = onAuthStateChanged(auth, user => {
+                    unsub();
+                    resolve(user);
+                });
+            });
+
             // 2. LER URL OU BASE DE DADOS PARA CONTINUAR A VER
             let startSeason = params.get("s");
             let startEpisode = params.get("e");
 
+            // Se não vier do "Continuar a Ver" (URL limpo), vai espreitar à BD
             if (!startSeason || !startEpisode) {
-                // Fica à espera que o Firebase reconheça o utilizador
-                await new Promise(resolve => {
-                    const unsub = onAuthStateChanged(auth, user => {
-                        unsub();
-                        resolve(user);
-                    });
-                });
-
                 const progresso = await getProgress(tmdbId);
                 if (progresso) {
                     startSeason = progresso.season;

@@ -1,9 +1,9 @@
 import { 
   getTrendingMovies, getTrendingSeries, getRecentMovies, getRecentSeries,
-  getRecommendationsByGenre 
+  getRecommendationsByGenre, getDetails
 } from "./tmdb.js"; 
 
-import { getTopGenre, getWatchedIds, getWatchLaterList } from "./db-logic.js"; 
+import { getTopGenre, getWatchedIds, getWatchLaterList, obterTodoOProgresso, removerProgresso } from "./db-logic.js"; 
 import { auth, onAuthStateChanged } from "./firebase-config.js";
 import { headerTemplate, sectionCardTemplate } from "./templates.js";
 
@@ -56,6 +56,8 @@ async function init() {
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("A gerar recomendações personalizadas...");
+
+        await carregarContinuarAVer(user);
 
         const watched = await getWatchedIds();
 
@@ -170,6 +172,181 @@ window.filtrarCategoria = (tipo, btnClicado) => {
     // o código acima pode falhar neles. 
     // SUGESTÃO: Para ficar perfeito, garante que no index.html envolves cada par (H2 + Slider) 
     // numa <div class="category-section">, como fizeste para o "Ver Mais Tarde".
+};
+
+// ==========================================
+// LÓGICA DO CONTINUAR A VER (Com Cálculo Inteligente de Temporadas)
+// ==========================================
+async function carregarContinuarAVer(user) {
+    const section = document.getElementById('continueWatchingSection');
+    const slider = document.getElementById('sliderContinue'); 
+    
+    if (!user || !section || !slider) return;
+
+    const progresso = await obterTodoOProgresso();
+    
+    if (progresso.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    slider.innerHTML = ''; 
+
+    for (const item of progresso) {
+        try {
+            const detalhes = await getDetails(item.id, 'tv');
+            if (!detalhes || !detalhes.seasons) continue; 
+            
+            // 1. Encontrar a temporada que o utilizador está a ver nos dados oficiais do TMDB
+            const seasonAtualData = detalhes.seasons.find(s => s.season_number === parseInt(item.season));
+            
+            let proximoEpisodio = parseInt(item.episode);
+            let proximaTemporada = parseInt(item.season);
+            let serieTerminada = false;
+
+            // 2. LÓGICA INTELIGENTE DE EPISÓDIOS E TEMPORADAS
+            if (seasonAtualData) {
+                if (proximoEpisodio < seasonAtualData.episode_count) {
+                    // Ainda há episódios nesta temporada
+                    proximoEpisodio += 1;
+                } else {
+                    // Chegámos ao fim desta temporada! Vamos ver se a próxima existe.
+                    const proximaSeasonData = detalhes.seasons.find(s => s.season_number === proximaTemporada + 1);
+                    
+                    if (proximaSeasonData && proximaSeasonData.episode_count > 0) {
+                        // Existe temporada seguinte. Salta para a T+1, Ep 1
+                        proximaTemporada += 1;
+                        proximoEpisodio = 1;
+                    } else {
+                        // Não há mais temporadas nem episódios. A série foi concluída!
+                        serieTerminada = true;
+                    }
+                }
+            } else {
+                // Caso a API falhe por algum motivo anormal, avança só um episódio
+                proximoEpisodio += 1;
+            }
+
+            // 3. SE A SÉRIE ACABOU: Apaga da BD automaticamente e não a desenha no ecrã!
+            if (serieTerminada) {
+                await removerProgresso(item.id);
+                continue; 
+            }
+
+            // 4. DESENHAR O CARTÃO COM OS DADOS NOVOS
+            const poster = detalhes.poster_path ? `https://image.tmdb.org/t/p/w200${detalhes.poster_path}` : 'https://placehold.co/200x300?text=Sem+Capa';
+            
+            // ... (código anterior: const poster = detalhes.poster_path...)
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.position = 'relative'; 
+            
+            // Desenhamos o cartão com o botão X a usar um ALERTA INLINE
+            card.innerHTML = `
+                <img src="${poster}" alt="${detalhes.name}" class="clicavel-ir-episodio" style="cursor: pointer;">
+                
+                <button 
+                    onclick="event.preventDefault(); event.stopPropagation(); window.abrirModalRemover(event, ${item.id}, this);" 
+                    style="position: absolute; top: 10px; left: 10px; background: rgba(229, 9, 20, 0.85); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 9999; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: background 0.3s;" 
+                    onmouseover="this.style.background='#E50914'" 
+                    onmouseout="this.style.background='rgba(229, 9, 20, 0.85)'">
+                    ✕
+                </button>
+
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--gold); color: var(--bg); font-weight: bold; padding: 3px 8px; border-radius: 5px; font-size: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none;">
+                    S${proximaTemporada} E${proximoEpisodio}
+                </div>
+
+                <div class="card-info clicavel-ir-episodio" style="cursor: pointer;">
+                    <h3>${detalhes.name}</h3>
+                </div>
+            `;
+
+            // Clique da Imagem para ver a série (mantém-se igual)
+            const irParaEpisodio = () => window.location.href = `watch.html?tmdb=${item.id}&type=tv&s=${proximaTemporada}&e=${proximoEpisodio}`;
+            card.querySelectorAll('.clicavel-ir-episodio').forEach(elemento => {
+                elemento.addEventListener('click', irParaEpisodio);
+            });
+
+            slider.appendChild(card);
+        } catch (erro) {
+            console.error("Erro ao desenhar série continuada:", erro);
+        }
+    }
+    
+    // Se, por acaso, todas as séries que estavas a ver tiverem terminado e apagadas nesta corrida, esconde a secção!
+    if (slider.children.length === 0) {
+        section.style.display = 'none';
+    }
+}
+
+// ==========================================
+// FUNÇÃO INFALÍVEL (MODAL GERADO EM JS PURO)
+// ==========================================
+window.abrirModalRemover = (event, id, btnElement) => {
+    // 1. Cria a camada escura que cobre o ecrã todo (z-index gigante)
+    const overlay = document.createElement('div');
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 999999; display: flex; justify-content: center; align-items: center;";
+
+    // 2. Cria a caixa do Modal
+    const box = document.createElement('div');
+    box.style.cssText = "background: #141414; padding: 30px; border-radius: 12px; border: 1px solid #333; text-align: center; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); animation: popupFade 0.3s ease-out;";
+
+    // 3. Injeta o conteúdo lá dentro
+    box.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 15px;">🗑️</div>
+        <h2 style="color: white; font-size: 1.5rem; margin-bottom: 10px; border:none;">Remover Série</h2>
+        <p style="color: #bbb; margin-bottom: 20px;">Queres mesmo remover esta série da tua lista de "Continuar a Ver"?</p>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button id="js-btn-sim" style="background: #E50914; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; width: 100%;">Sim, Remover</button>
+            <button id="js-btn-nao" style="background: #333; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer; font-size: 1rem; width: 100%;">Cancelar</button>
+        </div>
+    `;
+
+    // 4. Cola a caixa no fundo escuro, e o fundo escuro no ecrã!
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // 5. Lógica do botão "Cancelar"
+    document.getElementById('js-btn-nao').onclick = () => {
+        overlay.remove(); // Destrói o modal
+    };
+
+    // 6. Lógica do botão "Sim, Remover"
+    document.getElementById('js-btn-sim').onclick = async () => {
+        document.getElementById('js-btn-sim').innerText = "A remover...";
+        
+        // Vai à Base de Dados apagar
+        const sucesso = await removerProgresso(id);
+        
+        if (sucesso) {
+            overlay.remove(); // Destrói o modal imediatamente
+            
+            // Faz o cartão encolher e desaparecer
+            const card = btnElement.closest('.card');
+            if(card) {
+                card.style.transition = "opacity 0.3s, transform 0.3s";
+                card.style.opacity = "0";
+                card.style.transform = "scale(0.8)";
+                
+                setTimeout(() => {
+                    card.remove(); 
+                    
+                    // Esconde a secção inteira se a prateleira ficar vazia
+                    const slider = document.getElementById('sliderContinue');
+                    if (slider && slider.children.length === 0) {
+                        const sec = document.getElementById('continueWatchingSection');
+                        if (sec) sec.style.display = 'none';
+                    }
+                }, 300);
+            }
+        } else {
+            alert("Ocorreu um erro a apagar da Base de Dados.");
+            overlay.remove();
+        }
+    };
 };
 
 init();
